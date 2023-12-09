@@ -6,10 +6,10 @@ import { useCoupon } from "./context/CouponContext";
 import { useAuth } from "./context/AuthContext";
 
 function App() {
-    const { currentAccount, checkIfWalletConnected } = useAuth();
-    const { checkIfUserExists, addUser, getCompanyByAddress } = useCoupon();
+    const {currentAccount, checkIfWalletConnected} = useAuth();
+    const {checkIfUserExists, addUser, getCompanyByAddress} = useCoupon();
     const [count, setCount] = useState(0);
-    const navigate = useNavigate();
+	const navigate = useNavigate();
 
     const [redeemedCoupons, setRedeemedCoupons] = useState([
         {
@@ -23,10 +23,10 @@ function App() {
             value: 1000,
         },
     ]);
-
+    
     useEffect(() => {
-        if (currentAccount === "") checkIfWalletConnected();
-    }, [currentAccount]);
+        if(currentAccount === "") checkIfWalletConnected();
+    }, [currentAccount])
 
     const onClick = async () => {
         let [tab] = await chrome.tabs.query({ active: true });
@@ -40,49 +40,51 @@ function App() {
     };
 
     const userLoginButton = async () => {
-        try {
+        try{
             if (currentAccount === "") {
                 console.error("Error");
-                return;
+                return
             }
             const fetchUser = await checkIfUserExists(currentAccount);
 
-            if (fetchUser) {
-                console.log("Exists!");
+            console.log(fetchUser)
+            if(fetchUser) {
+            console.log("Exists!") 
             } else {
                 await addUser(currentAccount, 0, currentAccount);
             }
-            navigate("/#dashbaord");
-        } catch (err) {
-            console.log(err);
+            navigate("/dashboard")
+        }catch(err) {
+            console.log(err)
         }
-    };
+    }
 
     const companyLoginButton = async () => {
         if (currentAccount === "") {
             console.error("Error");
-            return;
+            return
         }
         const company = await getCompanyByAddress(currentAccount);
-        if (company["name"] !== "") {
-            console.log("Exists!");
-            navigate("/company");
+        if(company["name"] !== "") {
+           console.log("Exists!") 
+           navigate("/company")
         } else {
-            navigate("/companyLogin");
+            navigate("/companyLogin")
         }
-    };
+    }
+
 
     return (
         <ExtensionContainer>
             <AppLogo>Web3Coupons</AppLogo>
-            <button onClick={userLoginButton}>User Login </button>
-            <button onClick={companyLoginButton}>Company Login </button>
+                <button onClick={userLoginButton}>User Login </button>
+                <button onClick={companyLoginButton}>Company Login </button>
         </ExtensionContainer>
     );
 }
 
 const ExtensionContainer = styled.div`
-    min-width: 300px;
+	min-width: 300px;
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -100,13 +102,13 @@ const AppLogo = styled.div`
 const RedeemedCouponsSection = styled.div`
     display: flex;
     flex-direction: column;
-    margin-bottom: 1rem;
+	margin-bottom: 1rem;
 `;
 
 const NewCouponsSection = styled.div`
     display: flex;
     flex-direction: column;
-    margin-bottom: 1rem;
+	margin-bottom: 1rem;
 `;
 
 const SectionHeader = styled.div`
