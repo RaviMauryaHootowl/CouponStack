@@ -103,12 +103,17 @@ export const CouponContextProvider = ({ children }) => {
 	const getCompanyByAddress = async (address) => {
 		const contract = await connectingWithSmartContract();
 		const data = await contract.getCompanyByAddress(address);
+		console.log(await contract.fetchAllN())
 		return data;
 	}
 
 	const addCompany = async(name, url, address)=> {
 		const contract = await connectingWithSmartContract();
 		await contract.addCompany(name, url, address);
+	}
+	const addBulkProducts = async(CompanyId, amount, tokenURI, category, rating)=> {
+		const contract = await connectingWithSmartContract();
+		await contract.addBulkProducts(CompanyId, amount, tokenURI, category, rating);
 	}
 
 	const fetchUserCoupons = async() => {
@@ -138,7 +143,8 @@ export const CouponContextProvider = ({ children }) => {
 				addCompany,
 				setCount,
 				fetchUserCoupons, 
-				applyCoupon
+				applyCoupon,
+				addBulkProducts
 			}}
 		>
 			{children}
