@@ -12,6 +12,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Router>
                 <Routes>
                     <Route path="/" element={<App />} />
+                    <Route path="/generate" element={<Generate />} />
                 </Routes>
             </Router>
         </CouponContextProvider>
