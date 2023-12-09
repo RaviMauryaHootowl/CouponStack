@@ -52,12 +52,20 @@ contract Coupon is ERC1155, ERC1155Burnable {
         string memory url,
         address caddress
     ) public {
-        Company newCompany = Company(CompanyCount, name, url, caddress, 0);
+        Company memory newCompany = Company(
+            CompanyCount,
+            name,
+            url,
+            caddress,
+            0
+        );
         companyMapping[CompanyCount++] = newCompany;
         addressToCompany[caddress] = newCompany;
     }
 
-    function getCompanyByAddress(address caddress) public returns (Company) {
+    function getCompanyByAddress(
+        address caddress
+    ) public view returns (Company memory) {
         return addressToCompany[caddress];
     }
 }
