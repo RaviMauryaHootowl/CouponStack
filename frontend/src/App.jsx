@@ -1,35 +1,122 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from "react";
+import "./App.css";
+import { styled } from "styled-components";
+import { useNavigate } from "react-router-dom";
+import { useCoupon } from "./context/CouponContext";
+import { useAuth } from "./context/AuthContext";
 
 function App() {
-  const [count, setCount] = useState(0)
+    const { currentAccount, checkIfWalletConnected } = useAuth();
+    const { checkIfUserExists, addUser, getCompanyByAddress } = useCoupon();
+    const [count, setCount] = useState(0);
+    const navigate = useNavigate();
 
-  return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    const [redeemedCoupons, setRedeemedCoupons] = useState([
+        {
+            name: "Flipkart Big Billion Days",
+            offer: "1000 discount",
+            value: 1000,
+        },
+        {
+            name: "Amazon Web3 Sale",
+            offer: "1000 discount",
+            value: 1000,
+        },
+    ]);
+
+    useEffect(() => {
+        if (currentAccount === "") checkIfWalletConnected();
+    }, [currentAccount]);
+
+    const onClick = async () => {
+        let [tab] = await chrome.tabs.query({ active: true });
+        chrome.scripting.executeScript({
+            target: { tabId: tab.id },
+            func: () => {
+                document.body.style.backgroundColor = "green";
+                document.querySelector('[title="Search"]').value = "Sarah 👉👈";
+            },
+        });
+    };
+
+    const userLoginButton = async () => {
+        try {
+            if (currentAccount === "") {
+                console.error("Error");
+                return;
+            }
+            const fetchUser = await checkIfUserExists(currentAccount);
+
+            if (fetchUser) {
+                console.log("Exists!");
+            } else {
+                await addUser(currentAccount, 0, currentAccount);
+            }
+            navigate("/#dashbaord");
+        } catch (err) {
+            console.log(err);
+        }
+    };
+
+    const companyLoginButton = async () => {
+        if (currentAccount === "") {
+            console.error("Error");
+            return;
+        }
+        const company = await getCompanyByAddress(currentAccount);
+        if (company["name"] !== "") {
+            console.log("Exists!");
+            navigate("/company");
+        } else {
+            navigate("/companyLogin");
+        }
+    };
+
+    return (
+        <ExtensionContainer>
+            <AppLogo>Web3Coupons</AppLogo>
+            <button onClick={userLoginButton}>User Login </button>
+            <button onClick={companyLoginButton}>Company Login </button>
+        </ExtensionContainer>
+    );
 }
 
-export default App
+const ExtensionContainer = styled.div`
+    min-width: 300px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    font-family: sans-serif;
+    padding: 1rem;
+`;
+
+const AppLogo = styled.div`
+    font-weight: bold;
+    text-align: center;
+    padding: 1rem;
+    font-size: 1.2rem;
+`;
+
+const RedeemedCouponsSection = styled.div`
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+`;
+
+const NewCouponsSection = styled.div`
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+`;
+
+const SectionHeader = styled.div`
+    margin-bottom: 0.4rem;
+`;
+
+const RedeemedCouponCard = styled.div`
+    margin-bottom: 0.4rem;
+    background-color: #e0e0e0;
+    padding: 0.4rem;
+`;
+
+export default App;
