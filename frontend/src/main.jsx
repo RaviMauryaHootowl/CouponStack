@@ -7,6 +7,7 @@ import { AuthContextProvider } from "./context/AuthContext.jsx";
 import CompanyLogin from "./pages/CompanyLogin.jsx";
 import CompanyDashboard from "./pages/CompanyDashboard.jsx";
 import UserDashboard from "./pages/UserDashboard.jsx";
+import Generate from "./pages/Generate.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
     <AuthContextProvider>
@@ -17,6 +18,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                     <Route path="/companyLogin" element={<CompanyLogin />} />
                     <Route path="/company" element={<CompanyDashboard />} />
                     <Route path="/dashboard" element={<UserDashboard/>} />
+                    <Route path="/generate" element={<Generate />} />
                 </Routes>
             </Router>
         </CouponContextProvider>
