@@ -68,4 +68,132 @@ contract Coupon is ERC1155, ERC1155Burnable {
     ) public view returns (Company memory) {
         return addressToCompany[caddress];
     }
+
+    function setURI(string memory newuri) public {
+        _setURI(newuri);
+    }
+
+    function mint(
+        uint256 companyId,
+        string memory tokenURI,
+        string memory category,
+        uint256 rating
+    ) public {
+        companyCouponIds.increment();
+        uint256 newItemId = companyCouponIds.current();
+
+        _mint(msg.sender, newItemId, 1, "");
+        tokenToUri[newItemId] = tokenURI;
+        //_setURI(tokenURI);
+        companyIdToCouponsCount[companyId]++;
+        couponIdToCompanyId[newItemId] = companyId;
+        companyCouponMapping[newItemId] = CompanyCoupon({
+            companyId: companyId,
+            couponId: newItemId,
+            owner: msg.sender,
+            isPurchased: false,
+            cid: tokenURI,
+            category: category,
+            rating: rating
+        });
+    }
+
+    function addBulkProducts(
+        uint256 CompanyId,
+        uint256 amount,
+        string[] memory tokenURI,
+        string[] memory category,
+        uint256[] memory rating
+    ) public {
+        for (uint256 i = 0; i < amount; i++) {
+            mint(CompanyId, tokenURI[i], category[i], rating[i]);
+        }
+    }
+
+    function fetchCompanyById(
+        uint256 companyId
+    ) public view returns (Company memory) {
+        return companyMapping[companyId];
+    }
+
+    function fetchAllCompany() public view returns (Company[] memory) {
+        Company[] memory result = new Company[](CompanyCount);
+
+        for (uint256 i = 0; i < CompanyCount; i++) {
+            Company storage cur = companyMapping[i];
+            result[i] = cur;
+        }
+
+        return result;
+    }
+
+    // function fetchCompanyCouponsById(
+    //     uint256 itemId
+    // ) public view returns (CompanyCoupon memory) {
+    //     require(
+    //         !companyCouponMapping[itemId].isPurchased,
+    //         "Coupon is already Used"
+    //     );
+    //     return companyCouponMapping[itemId];
+    // }
+
+    function safeTransferFromHelper(
+        address sender,
+        address receiver,
+        uint256 id
+    ) public {
+        safeTransferFrom(sender, receiver, id, 1, "");
+    }
+
+    function buyCoupon(uint256 CouponId, address claimAddr) public {
+        require(
+            !companyCouponMapping[CouponId].isPurchased,
+            "Coupon is already used or is Invalid!!"
+        );
+        require(msg.sender == owner);
+        companyCouponMapping[CouponId].owner = claimAddr;
+        companyCouponMapping[CouponId].isPurchased = true;
+        safeTransferFromHelper(msg.sender, claimAddr, CouponId);
+
+        //emit TransferSingle(owner, owner, msg.sender, CouponId, 1);
+    }
+
+    function useCoupon(uint CouponId) public {
+        require(
+            companyCouponMapping[CouponId].owner == msg.sender,
+            "You don't have the coupon or the coupon is invalid."
+        );
+        _burn(msg.sender, CouponId, 1);
+        companyIdToCouponsCount[couponIdToCompanyId[CouponId]]--;
+        delete companyCouponMapping[CouponId];
+    }
+
+    function fetchAllCouponOfUser()
+        public
+        view
+        returns (CompanyCoupon[] memory)
+    {
+        uint256 totalItemCount = companyCouponIds.current();
+        uint256 itemCount = 0;
+        uint256 currentIndex = 0;
+
+        for (uint256 i = 0; i < totalItemCount; i++) {
+            if (companyCouponMapping[i + 1].owner == msg.sender) {
+                itemCount += 1;
+            }
+        }
+
+        CompanyCoupon[] memory items = new CompanyCoupon[](itemCount);
+        for (uint256 i = 0; i < totalItemCount; i++) {
+            if (companyCouponMapping[i + 1].owner == msg.sender) {
+                uint256 currentId = i + 1;
+                CompanyCoupon storage currentItem = companyCouponMapping[
+                    currentId
+                ];
+                items[currentIndex] = currentItem;
+                currentIndex += 1;
+            }
+        }
+        return items;
+    }
 }
