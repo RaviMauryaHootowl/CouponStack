@@ -5,6 +5,7 @@ import "./index.css";
 import { CouponContextProvider } from "./context/CouponContext.jsx";
 import { AuthContextProvider } from "./context/AuthContext.jsx";
 import CompanyLogin from "./pages/CompanyLogin.jsx";
+import CompanyDashboard from "./pages/CompanyDashboard.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
     <AuthContextProvider>
@@ -13,6 +14,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                 <Routes>
                     <Route path="/" element={<App />} />
                     <Route path="/companyLogin" element={<CompanyLogin />} />
+                    <Route path="/company" element={<CompanyDashboard />} />
                 </Routes>
             </Router>
         </CouponContextProvider>
