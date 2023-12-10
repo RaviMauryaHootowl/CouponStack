@@ -19,6 +19,7 @@ import {
 } from "@mui/icons-material";
 import moment from "moment";
 import { useDropzone } from "react-dropzone";
+import { sha256 } from "ethers/lib/utils";
 
 const baseStyle = {
     flex: 1,
@@ -49,7 +50,6 @@ const rejectStyle = {
 };
 
 const Generate = () => {
-
     const [isLoading, setIsLoading] = useState(false);
     const [brandName, setBrandName] = useState("");
     const [couponName, setCouponName] = useState("");
@@ -57,14 +57,22 @@ const Generate = () => {
     const [couponValue, setCouponValue] = useState("0");
     const [profileBio, setProfileBio] = useState("");
     const [nftPicFile, setNFTPicFile] = useState(null);
-    const {currentAccount, checkIfWalletConnected} = useAuth();
-    const {addBulkProducts, getCompanyByAddress, buyCoupon, fetchUsersList, fetchCompanyCoupons, users, setUsers } = useCoupon();
+    const { currentAccount, checkIfWalletConnected } = useAuth();
+    const {
+        addBulkProducts,
+        getCompanyByAddress,
+        buyCoupon,
+        fetchUsersList,
+        fetchCompanyCoupons,
+        users,
+        setUsers,
+    } = useCoupon();
     const [company, setCompany] = useState({});
-    
+
     useEffect(() => {
-        if(currentAccount === "") checkIfWalletConnected();
+        if (currentAccount === "") checkIfWalletConnected();
         else fetchCompany();
-    }, [currentAccount])
+    }, [currentAccount]);
 
     const onDrop = useCallback(
         (acceptedFiles) => {
@@ -98,36 +106,52 @@ const Generate = () => {
     } = useDropzone({ onDrop });
 
     const handleMint = async (couponQuantity, couponValue) => {
-        try{
+        try {
             let tokenURIs = [];
             let categories = [];
             let ratings = [];
-            for(let i=0; i<couponQuantity; i++) {
-                tokenURIs.push("dummyuri");
+            // console.log(`${sha256(moment().valueOf())}`.substring(2, 10));
+            for (let i = 0; i < couponQuantity; i++) {
+                tokenURIs.push(
+                    JSON.stringify({
+                        cid: "",
+                        code: `${sha256(moment().valueOf())}`.substring(2, 10),
+                        value: `${couponValue}`,
+                    })
+                );
                 categories.push("asdf");
                 ratings.push(parseInt(couponValue));
             }
 
-            await addBulkProducts(company.companyId, parseInt(couponQuantity), tokenURIs, categories, ratings);
-            const coupons = await fetchCompanyCoupons(parseInt(company.companyId.toString()));
+            await addBulkProducts(
+                company.companyId,
+                parseInt(couponQuantity),
+                tokenURIs,
+                categories,
+                ratings
+            );
+
+            const coupons = await fetchCompanyCoupons(
+                parseInt(company.companyId.toString())
+            );
 
             console.log(coupons);
-            
-            let j=0
-            for(let i=0; i<coupons.length; i++) {
+
+            let j = 0;
+            for (let i = 0; i < coupons.length; i++) {
                 await buyCoupon(coupons[i].couponId, users[j++]);
-                if(j === users.length) j=0;
-            } 
-        } catch(err) {
+                if (j === users.length) j = 0;
+            }
+        } catch (err) {
             console.log(err);
         }
-    }
+    };
 
-    const fetchCompany = useCallback(async() => {
+    const fetchCompany = useCallback(async () => {
         const data = await getCompanyByAddress(currentAccount);
-        console.log(data)
+        console.log(data);
         setCompany(data);
-    }, [])
+    }, []);
 
     const style = useMemo(
         () => ({
@@ -140,80 +164,106 @@ const Generate = () => {
     );
 
     return (
-        <HomeContainer>
-            <HomeAppContainer>
-                <MainContentContainer>
-                    <AppHeaderContainer>
-                        <AppLogo>Web3Coupons</AppLogo>
-                    </AppHeaderContainer>
-                    <RegisterPageContainer>
-                        <p>{users.length} users are eligible for the coupons!</p>
-                        <TextInputGroup>
-                            <span>Brand Name</span>
-                            <CustomInput
-                                type="text"
-                                value={company?.name}
-                                disabled={true}
-                                placeholder="Enter your brand name"
-                            />
-                        </TextInputGroup>
-                         <TextInputGroup>
-                            <span>Coupon Name</span>
-                            <CustomInput
-                                type="text"
-                                value={couponName}
-                                onChange={(e) => {
-                                    setCouponName(e.target.value);
-                                }}
-                                placeholder="Enter your coupon name"
-                            />
-                        </TextInputGroup>
-                        
-                        <TextInputGroup>
-                            <span>Coupon NFT Image</span>
-                            <div {...getRootProps({ style })}>
-                                <input {...getInputProps()} />
-                                <UploadFileOutlined />
-                                <p>
-                                    {nftPicFile != null
-                                        ? `${nftPicFile.length} files added`
-                                        : "Upload image"}
-                                </p>
-                            </div>
-                        </TextInputGroup>
-                        
-                        <TextInputGroup>
-                            <span>Quantity</span>
-                            <CustomInput
-                                type="text"
-                                value={couponQuantity}
-                                onChange={(e) => {
-                                    setCouponQuantity(e.target.value);
-                                }}
-                                placeholder="Number of coupons to generate"
-                            />
-                        </TextInputGroup>
-                        
-                        <TextInputGroup>
-                            <span>Value</span>
-                            <CustomInput
-                                type="text"
-                                value={couponValue}
-                                onChange={(e) => {
-                                    setCouponValue(e.target.value);
-                                }}
-                                placeholder="Discount provided by the coupon"
-                            />
-                        </TextInputGroup> 
-                    </RegisterPageContainer>
-                    <SubmitButton onClick={e=>handleMint(couponQuantity, couponValue)}>
-                        {isLoading ? <BeatLoader color="#ffffff" /> : "Create"}
-                    </SubmitButton>
-                </MainContentContainer>
-            </HomeAppContainer>
-        </HomeContainer>
+        <ExtensionContainer>
+            <ExtensionContentCard>
+                <AppHeaderContainer>
+                    <AppLogo>CouponStack</AppLogo>
+                </AppHeaderContainer>
+                <RegisterPageContainer>
+                    <UserCountInfo>
+                        {users.length} users are eligible for the coupons!
+                    </UserCountInfo>
+                    <TextInputGroup>
+                        <span>Brand Name</span>
+                        <CustomInput
+                            type="text"
+                            value={company?.name}
+                            disabled={true}
+                            placeholder="Enter your brand name"
+                        />
+                    </TextInputGroup>
+                    <TextInputGroup>
+                        <span>Coupon Name</span>
+                        <CustomInput
+                            type="text"
+                            value={couponName}
+                            onChange={(e) => {
+                                setCouponName(e.target.value);
+                            }}
+                            placeholder="Enter your coupon name"
+                        />
+                    </TextInputGroup>
+
+                    <TextInputGroup>
+                        <span>Coupon NFT Image</span>
+                        <div {...getRootProps({ style })}>
+                            <input {...getInputProps()} />
+                            <UploadFileOutlined />
+                            <p>
+                                {nftPicFile != null
+                                    ? `${nftPicFile.length} files added`
+                                    : "Upload image"}
+                            </p>
+                        </div>
+                    </TextInputGroup>
+
+                    <TextInputGroup>
+                        <span>Quantity</span>
+                        <CustomInput
+                            type="text"
+                            value={couponQuantity}
+                            onChange={(e) => {
+                                setCouponQuantity(e.target.value);
+                            }}
+                            placeholder="Number of coupons to generate"
+                        />
+                    </TextInputGroup>
+
+                    <TextInputGroup>
+                        <span>Value</span>
+                        <CustomInput
+                            type="text"
+                            value={couponValue}
+                            onChange={(e) => {
+                                setCouponValue(e.target.value);
+                            }}
+                            placeholder="Discount provided by the coupon"
+                        />
+                    </TextInputGroup>
+                </RegisterPageContainer>
+                <SubmitButton
+                    onClick={(e) => handleMint(couponQuantity, couponValue)}
+                >
+                    {isLoading ? <BeatLoader color="#ffffff" /> : "Create"}
+                </SubmitButton>
+            </ExtensionContentCard>
+        </ExtensionContainer>
     );
 };
+
+const ExtensionContainer = styled.div`
+    background-color: black;
+    height: 100vh;
+    min-width: 300px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: sans-serif;
+    padding: 1rem;
+    color: white;
+`;
+
+const ExtensionContentCard = styled.div`
+    width: max(30%, 400px);
+    height: 90%;
+    background-color: #1f1f1f;
+    border-radius: 1rem;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+`;
 
 const HomeContainer = styled.div`
     width: 100%;
@@ -296,8 +346,12 @@ const RegisterPageContainer = styled.div`
     padding: 1rem 0;
 `;
 
+const UserCountInfo = styled.div`
+    margin: 1rem 0;
+`;
+
 const TextInputGroup = styled.div`
-    background-color: #e7e7e7;
+    background-color: black;
     border-radius: 6px;
     border: none;
     outline: none;
@@ -320,6 +374,7 @@ const CustomInput = styled.input`
     border: none;
     outline: none;
     font-size: 1.1rem;
+    color: #e3e3e3;
 `;
 
 const SubmitButton = styled.button`
