@@ -40,11 +40,18 @@ const UserDashboard = () => {
                     {redeemedCoupons.map((coupon, index) => {
                         return (
                             <RedeemedCouponCard key={index}>
-                                <button
+                                <PlainLine>Code: {
+                                    JSON.parse(coupon.cid).code
+                                }</PlainLine>
+                                <PlainLine>Value: ₹{
+                                    JSON.parse(coupon.cid).value
+                                }/-</PlainLine>
+                                
+                                <ApplyButton
                                     onClick={(e) => applyCouponButton(index)}
                                 >
                                     Apply
-                                </button>
+                                </ApplyButton>
                             </RedeemedCouponCard>
                         );
                     })}
@@ -71,6 +78,7 @@ const ExtensionContainer = styled.div`
 const ExtensionContentCard = styled.div`
     width: max(30%, 400px);
     height: 90%;
+    overflow-y: scroll;
     background-color: #1f1f1f;
     border-radius: 1rem;
     display: flex;
@@ -82,13 +90,21 @@ const GraphicSection = styled.div`
     flex: 1;
 `;
 
+const PlainLine = styled.div`
+    display: flex;
+    flex-direction: row;
+`;
+
 const ContentSection = styled.div`
     display: flex;
     flex-direction: column;
     align-items: start;
 `;
 
-const SectionHeader = styled.div``;
+const SectionHeader = styled.div`
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+`;
 
 const AppSubtitle = styled.div`
     font-size: 1rem;
@@ -167,7 +183,37 @@ const NewCouponsSection = styled.div`
 `;
 
 const RedeemedCouponCard = styled.div`
-    border: 1px solid white;
+    display: flex;
+    flex-direction: column;
+    background-color: #3e3e3e;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+`;
+
+const ApplyButton = styled.button`
+    background-color: #8e44ad;
+    color: white;
+    border: none;
+    outline: none;
+    border-bottom: #7d339c 6px solid;
+    padding: 0.8rem 2rem;
+    border-radius: 0.5rem;
+    font-size: 1.1rem;
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.5s ease;
+    &:hover {
+        transform: translateY(-2px);
+    }
+    &:active {
+        transition: all 0.1s ease;
+        transform: translateY(4px);
+        border-bottom: 0;
+    }
 `;
 
 export default UserDashboard;

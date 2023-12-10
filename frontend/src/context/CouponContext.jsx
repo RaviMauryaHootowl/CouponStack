@@ -105,6 +105,7 @@ export const CouponContextProvider = ({ children }) => {
 
 	const getCompanyByAddress = async (address) => {
 		const contract = await connectingWithSmartContract();
+		console.log(address);
 		const data = await contract.getCompanyByAddress(address);
 		return data;
 	}
@@ -114,8 +115,10 @@ export const CouponContextProvider = ({ children }) => {
 		await contract.addCompany(name, url, address);
 	}
 	const addBulkProducts = async(CompanyId, amount, tokenURIs, categorys, ratings)=> {
+		console.log(CompanyId, amount, tokenURIs, categorys, ratings)
 		const contract = await connectingWithSmartContract();
-		await contract.addBulkProducts(CompanyId, amount, tokenURIs, categorys, ratings);
+		const transaction = await contract.addBulkProducts(CompanyId, amount, tokenURIs, categorys, ratings);
+		await transaction.wait();
 	}
 
 	const fetchUserCoupons = async() => {
@@ -125,8 +128,10 @@ export const CouponContextProvider = ({ children }) => {
 	}
 
 	const applyCoupon = async(couponId, value) => {
+		console.log(couponId)
 		const contract = await connectingWithSmartContract();
-		await contract.useCoupon(couponId);
+		const transaction = await contract.useCoupon(couponId);
+		await transaction.wait();
 	}
 
 	const fetchCompanyCoupons = async(companyId) => {
@@ -138,6 +143,7 @@ export const CouponContextProvider = ({ children }) => {
 
 		let res = []
 		for(let i=0; i<data.length; i++) {
+			console.log(parseInt(data[i].companyId.toString()))
 			if(parseInt(data[i].companyId.toString()) === companyId) {
 				res.push(data[i]);
 			}
@@ -152,8 +158,10 @@ export const CouponContextProvider = ({ children }) => {
 	}
 
 	const buyCoupon = async(couponId, userAddress) => {
-		const contract = await connectingWithSmartContract();
+		const new_signer = new ethers.Wallet(privateKey, provider);
+		const contract = fetchContract(new_signer);
 		await contract.buyCoupon(couponId, userAddress);
+		console.log("Done!")
 	}
 
 	const callXmtpQuery = async (address) => {
@@ -350,13 +358,14 @@ export const CouponContextProvider = ({ children }) => {
 		let addressList = [
 			"0x2F60D2BB84Eb8df6951F7215ef035eF052BA2725",
 			"0xB0CCf43adA6CBaA26dcf4907117b496d49f74242",
-			"0x537265E3Fa15C839E445A483e8428e2Dd627d00c",
-			"0x78A42a84bFE3E173C3A9246b3F5F1c5Aa8BBaE72"
 		];
 		const users = await getUsersData();
-		// for(const user in users) {
-		// 	addressList.push(user.wallet_address);
-		// }
+		console.log(users);
+		for(const i in users) {
+			addressList.push(users[i].wallet_address);
+		}
+
+		console.log(addressList)
 
 		let xmtpData = []
 		let lensData = [];
@@ -367,9 +376,10 @@ export const CouponContextProvider = ({ children }) => {
 		for await (const item of addressList) {
 	
 			const res = await callXmtpQuery(item);
+			if(res === null) continue;
 			const newObj = {
-				address: res?.XMTPs?.XMTP[0]?.owner?.addresses[0],
-				enable: res?.XMTPs?.XMTP[0]?.isXMTPEnabled
+				address: res?.XMTPs?.XMTP !== null ?  res?.XMTPs?.XMTP[0]?.owner?.addresses[0] : 0,
+				enable: res?.XMTPs?.XMTP != null ? res?.XMTPs?.XMTP[0]?.isXMTPEnabled : 0
 			}
 			xmtpData.push(newObj);
 		}
@@ -378,7 +388,7 @@ export const CouponContextProvider = ({ children }) => {
 			const res = await callLensQuery(item);
 			const newObj = {
 				address : item,
-				followerCount: res?.Socials?.Social[0]?.followerCount
+				followerCount: res?.Socials?.Social !== null ? res?.Socials?.Social[0]?.followerCount : 0
 			}
 		
 			lensData.push(newObj);
@@ -389,7 +399,7 @@ export const CouponContextProvider = ({ children }) => {
 			const res = await callFarcasterQuery(item);
 			const newObj = {
 				address : item,
-				followerCount: res?.Socials?.Social[0]?.followerCount
+				followerCount: res?.Socials?.Social !== null ? res?.Socials?.Social[0]?.followerCount : 0
 			}
 			farcasterData.push(newObj);
 		}
@@ -397,12 +407,12 @@ export const CouponContextProvider = ({ children }) => {
 		for await (const item of addressList) {
 			
 			const data = await callTokenQuery(item);
-			const erc20 = data.erc20?.data.length;
+			const erc20 = data.erc20?.data?.length;
 		
-			const erc1155 = data.erc1155?.data.length;
-			const erc721 = data.erc721?.data.length;
+			const erc1155 = data.erc1155?.data?.length;
+			const erc721 = data.erc721?.data?.length;
 
-			const erc6551 = data.erc6551?.data.length
+			const erc6551 = data.erc6551?.data?.length
 
 			userTokenValue.push({
 				address: item,

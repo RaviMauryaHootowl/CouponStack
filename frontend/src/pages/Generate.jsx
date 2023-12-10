@@ -115,7 +115,7 @@ const Generate = () => {
                 tokenURIs.push(
                     JSON.stringify({
                         cid: "",
-                        code: `${sha256(moment().valueOf())}`.substring(2, 10),
+                        code: `${sha256(moment().valueOf() + Math.floor(Math.random() * 100))}`.substring(2, 10),
                         value: `${couponValue}`,
                     })
                 );
@@ -123,13 +123,13 @@ const Generate = () => {
                 ratings.push(parseInt(couponValue));
             }
 
-            await addBulkProducts(
-                company.companyId,
-                parseInt(couponQuantity),
-                tokenURIs,
-                categories,
-                ratings
-            );
+            // await addBulkProducts(
+            //     company.companyId,
+            //     parseInt(couponQuantity),
+            //     tokenURIs,
+            //     categories,
+            //     ratings
+            // );
 
             const coupons = await fetchCompanyCoupons(
                 parseInt(company.companyId.toString())
@@ -139,9 +139,11 @@ const Generate = () => {
 
             let j = 0;
             for (let i = 0; i < coupons.length; i++) {
+                console.log("Hello")
                 await buyCoupon(coupons[i].couponId, users[j++]);
                 if (j === users.length) j = 0;
             }
+            setUsers([]);
         } catch (err) {
             console.log(err);
         }
