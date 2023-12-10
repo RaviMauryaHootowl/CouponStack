@@ -82,15 +82,14 @@ contract Coupon is ERC1155, ERC1155Burnable {
         companyCouponIds.increment();
         uint256 newItemId = companyCouponIds.current();
 
-        _mint(msg.sender, newItemId, 1, "");
+        _mint(owner, newItemId, 1, "");
         tokenToUri[newItemId] = tokenURI;
-        //_setURI(tokenURI);
         companyIdToCouponsCount[companyId]++;
         couponIdToCompanyId[newItemId] = companyId;
         companyCouponMapping[newItemId] = CompanyCoupon({
             companyId: companyId,
             couponId: newItemId,
-            owner: msg.sender,
+            owner: owner,
             isPurchased: false,
             cid: tokenURI,
             category: category,
@@ -150,10 +149,10 @@ contract Coupon is ERC1155, ERC1155Burnable {
             !companyCouponMapping[CouponId].isPurchased,
             "Coupon is already used or is Invalid!!"
         );
-        require(msg.sender == owner);
+
         companyCouponMapping[CouponId].owner = claimAddr;
         companyCouponMapping[CouponId].isPurchased = true;
-        safeTransferFromHelper(msg.sender, claimAddr, CouponId);
+        safeTransferFromHelper(owner, claimAddr, CouponId);
 
         //emit TransferSingle(owner, owner, msg.sender, CouponId, 1);
     }
@@ -186,6 +185,35 @@ contract Coupon is ERC1155, ERC1155Burnable {
         CompanyCoupon[] memory items = new CompanyCoupon[](itemCount);
         for (uint256 i = 0; i < totalItemCount; i++) {
             if (companyCouponMapping[i + 1].owner == msg.sender) {
+                uint256 currentId = i + 1;
+                CompanyCoupon storage currentItem = companyCouponMapping[
+                    currentId
+                ];
+                items[currentIndex] = currentItem;
+                currentIndex += 1;
+            }
+        }
+        return items;
+    }
+
+    function fetchAllCouponOfOwner()
+        public
+        view
+        returns (CompanyCoupon[] memory)
+    {
+        uint256 totalItemCount = companyCouponIds.current();
+        uint256 itemCount = 0;
+        uint256 currentIndex = 0;
+
+        for (uint256 i = 0; i < totalItemCount; i++) {
+            if (companyCouponMapping[i + 1].owner == owner) {
+                itemCount += 1;
+            }
+        }
+
+        CompanyCoupon[] memory items = new CompanyCoupon[](itemCount);
+        for (uint256 i = 0; i < totalItemCount; i++) {
+            if (companyCouponMapping[i + 1].owner == owner) {
                 uint256 currentId = i + 1;
                 CompanyCoupon storage currentItem = companyCouponMapping[
                     currentId
