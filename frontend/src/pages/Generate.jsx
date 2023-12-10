@@ -58,12 +58,14 @@ const Generate = () => {
     const [profileBio, setProfileBio] = useState("");
     const [nftPicFile, setNFTPicFile] = useState(null);
     const {currentAccount, checkIfWalletConnected} = useAuth();
-    const {addBulkProducts, getCompanyByAddress } = useCoupon();
+    const {addBulkProducts, getCompanyByAddress, buyCoupon, fetchUsersList, fetchCompanyCoupons, users, setUsers } = useCoupon();
     const [company, setCompany] = useState({});
+    
     useEffect(() => {
         if(currentAccount === "") checkIfWalletConnected();
         else fetchCompany();
     }, [currentAccount])
+
     const onDrop = useCallback(
         (acceptedFiles) => {
             const tempList = acceptedFiles;
@@ -95,14 +97,38 @@ const Generate = () => {
         isDragReject,
     } = useDropzone({ onDrop });
 
-    const handleMint =async (couponQuantity, couponValue) => {
-        console.log(couponQuantity, couponValue)
-        await addBulkProducts(company.companyId, couponQuantity, ["dummyuri", "asdf"], ["asdf", "adsf"], [couponValue, couponValue] );
+    const handleMint = async (couponQuantity, couponValue) => {
+        try{
+            let tokenURIs = [];
+            let categories = [];
+            let ratings = [];
+            for(let i=0; i<couponQuantity; i++) {
+                tokenURIs.push("dummyuri");
+                categories.push("asdf");
+                ratings.push(parseInt(couponValue));
+            }
+
+            await addBulkProducts(company.companyId, parseInt(couponQuantity), tokenURIs, categories, ratings);
+            const coupons = await fetchCompanyCoupons(parseInt(company.companyId.toString()));
+
+            console.log(coupons);
+            
+            let j=0
+            for(let i=0; i<coupons.length; i++) {
+                await buyCoupon(coupons[i].couponId, users[j++]);
+                if(j === users.length) j=0;
+            } 
+        } catch(err) {
+            console.log(err);
+        }
     }
+
     const fetchCompany = useCallback(async() => {
         const data = await getCompanyByAddress(currentAccount);
+        console.log(data)
         setCompany(data);
     }, [])
+
     const style = useMemo(
         () => ({
             ...baseStyle,
@@ -113,8 +139,6 @@ const Generate = () => {
         [isFocused, isDragAccept, isDragReject]
     );
 
-    const registerUser = () => {};
-
     return (
         <HomeContainer>
             <HomeAppContainer>
@@ -123,14 +147,13 @@ const Generate = () => {
                         <AppLogo>Web3Coupons</AppLogo>
                     </AppHeaderContainer>
                     <RegisterPageContainer>
+                        <p>{users.length} users are eligible for the coupons!</p>
                         <TextInputGroup>
                             <span>Brand Name</span>
                             <CustomInput
                                 type="text"
-                                value={brandName}
-                                onChange={(e) => {
-                                    setBrandName(e.target.value);
-                                }}
+                                value={company?.name}
+                                disabled={true}
                                 placeholder="Enter your brand name"
                             />
                         </TextInputGroup>
