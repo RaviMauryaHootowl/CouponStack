@@ -10,7 +10,7 @@ function App() {
     const {checkIfUserExists, addUser, getCompanyByAddress} = useCoupon();
     const [count, setCount] = useState(0);
 	const navigate = useNavigate();
-
+ 
     const [redeemedCoupons, setRedeemedCoupons] = useState([
         {
             name: "Flipkart Big Billion Days",
